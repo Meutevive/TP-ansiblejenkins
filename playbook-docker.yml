@@ -1,0 +1,108 @@
+---
+- name: Déploiement des services Docker (Nginx Proxy Manager, WordPress, Vaultwarden, Portainer)
+  hosts: docker
+  become: true
+
+  tasks:
+    # ---------------------  Docker ---------------------
+    - name: Mettre à jour les paquets
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Installer Docker et Docker Compose
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Activer Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # ---------------------  le Réseau Docker ---------------------
+    - name: Créer un réseau Docker pour les services
+      docker_network:
+        name: proxy_network
+        driver: bridge
+
+    # ---------------------  Nginx Proxy Manager ---------------------
+    - name: Déployer Nginx Proxy Manager
+      docker_container:
+        name: nginx_proxy_manager
+        image: jc21/nginx-proxy-manager:latest
+        restart_policy: always
+        ports:
+          - "80:80"
+          - "81:81"
+          - "443:443"
+        volumes:
+          - /docker/nginx-proxy-manager/data:/data
+          - /docker/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+        networks:
+          - name: proxy_network
+
+    # ---------------------  Portainer ---------------------
+    - name: Déployer Portainer
+      docker_container:
+        name: portainer
+        image: portainer/portainer-ce
+        restart_policy: always
+        ports:
+          - "9000:9000"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /docker/portainer:/data
+        networks:
+          - name: proxy_network
+
+    # --------------------- WordPress ---------------------
+    - name: Déployer MySQL pour WordPress
+      docker_container:
+        name: wordpress_db
+        image: mysql:5.7
+        restart_policy: always
+        environment:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: wordpress
+          MYSQL_USER: wordpress
+          MYSQL_PASSWORD: wordpresspassword
+        volumes:
+          - /docker/wordpress/mysql:/var/lib/mysql
+        networks:
+          - name: proxy_network
+
+    - name: Déployer WordPress
+      docker_container:
+        name: wordpress
+        image: wordpress:latest
+        restart_policy: always
+        environment:
+          WORDPRESS_DB_HOST: wordpress_db
+          WORDPRESS_DB_USER: wordpress
+          WORDPRESS_DB_PASSWORD: wordpresspassword
+        ports:
+          - "8080:80"
+        networks:
+          - name: proxy_network
+        links:
+          - wordpress_db
+
+# --------------------- Vaultwarden ---------------------
+    - name: Déployer Vaultwarden
+      docker_container:
+        name: vaultwarden
+        image: vaultwarden/server:latest
+        restart_policy: always
+        ports:
+          - "8081:80"
+        volumes:
+          - /docker/vaultwarden:/data
+        environment:
+          SIGNUPS_ALLOWED: "false"
+          ADMIN_TOKEN: "supersecuretoken"
+        networks:
+          - name: proxy_network

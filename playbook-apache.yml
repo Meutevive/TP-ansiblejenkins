@@ -1,0 +1,49 @@
+---
+- name: Installation des services Apache
+  hosts: apache
+  become: true
+  tasks:
+    - name: Installer Apache et dépendances
+      apt:
+        name:
+          - apache2
+          - php
+          - unzip
+          - curl
+        state: present
+
+    - name: Activer les modules Apache nécessaires
+      apache2_module:
+        state: present
+        name: rewrite
+
+    - name: Créer les Vhosts
+      copy:
+        dest: "/etc/apache2/sites-available/{{ item.name }}.conf"
+        content: |
+          <VirtualHost *:80>
+              ServerName {{ item.domain }}
+              DocumentRoot /var/www/html/{{ item.name }}
+              <Directory /var/www/html/{{ item.name }}>
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+      with_items:
+        - { name: 'filegator', domain: 'files.domaine.local' }
+        - { name: 'freshrss', domain: 'news.domaine.local' }
+        - { name: 'glpi', domain: 'support.domaine.local' }
+        - { name: 'nextcloud', domain: 'cloud.domaine.local' }
+
+    - name: Activer les Vhosts
+      command: a2ensite {{ item.name }}
+      with_items:
+        - { name: 'filegator' }
+        - { name: 'freshrss' }
+        - { name: 'glpi' }
+        - { name: 'nextcloud' }
+
+    - name: Redémarrer Apache
+      systemd:
+        name: apache2
+        state: restarted
