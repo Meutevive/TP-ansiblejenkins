@@ -3,7 +3,7 @@
   hosts: apache
   become: true
   vars:
-    ansible_become_pass: "root"  # Mot de passe root pour la VM en distance
+    ansible_become_pass: "root"
 
   tasks:
     # -------------- Installe Apache et les dépendances --------------
@@ -43,9 +43,8 @@
         dest: "/tmp/filegator.zip"
 
     - name: Décompresser FileGator avec unzip
-      command:
-        cmd: "unzip -o /tmp/filegator.zip -d /var/www/html/filegator"
-      args:
+      shell:
+        cmd: "unzip -o /tmp/filegator.zip -d /var/www/html/filegator && mv /var/www/html/filegator/filegator-*/* /var/www/html/filegator/"
         creates: "/var/www/html/filegator/index.php"
 
     - name: Ajuster les permissions de FileGator
@@ -92,9 +91,8 @@
         dest: "/tmp/nextcloud.zip"
 
     - name: Décompresser Nextcloud avec unzip
-      command:
+      shell:
         cmd: "unzip -o /tmp/nextcloud.zip -d /var/www/html/nextcloud"
-      args:
         creates: "/var/www/html/nextcloud/index.php"
 
     - name: Ajuster les permissions de Nextcloud
