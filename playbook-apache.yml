@@ -3,8 +3,8 @@
   hosts: apache
   become: true
   vars:
-    ansible_become_pass: "root" # Mot de passe root pour la vm en distance
-    
+    ansible_become_pass: "root"  # Mot de passe root pour la VM en distance
+
   tasks:
     # -------------- Installe Apache et les dépendances --------------
     - name: Installer Apache et dépendances
@@ -22,7 +22,7 @@
         state: present
         name: rewrite
 
-    # -------------- Crée les dossiers pour les Vhosts --------------
+    # -------------- Crée les dossiers pour les services --------------
     - name: Créer les dossiers pour les services web
       file:
         path: "/var/www/html/{{ item }}"
@@ -37,12 +37,10 @@
         - nextcloud
 
     # -------------- Télécharge et Installe FileGator --------------
-    - name: Télécharger et extraire FileGator
-      unarchive:
-        src: "https://github.com/filegator/filegator/archive/refs/tags/v7.12.0.zip"
-        dest: "/var/www/html/filegator"
-        remote_src: yes
-
+    - name: Télécharger FileGator
+      get_url:
+        url: "https://github.com/filegator/filegator/archive/refs/tags/v7.12.0.zip"
+        dest: "/tmp/filegator.zip"
 
     - name: Décompresser FileGator
       unarchive:
@@ -51,12 +49,13 @@
         remote_src: yes
         owner: www-data
         group: www-data
+        extra_opts: [--strip-components=1]
 
     # -------------- Télécharge et Installe FreshRSS --------------
     - name: Télécharger FreshRSS
       git:
-        repo: https://github.com/FreshRSS/FreshRSS.git
-        dest: /var/www/html/freshrss
+        repo: "https://github.com/FreshRSS/FreshRSS.git"
+        dest: "/var/www/html/freshrss"
         version: master
 
     # -------------- Télécharge et Installe GLPI --------------
@@ -72,6 +71,7 @@
         remote_src: yes
         owner: www-data
         group: www-data
+        extra_opts: [--strip-components=1]
 
     # -------------- Télécharge et Installe Nextcloud --------------
     - name: Télécharger Nextcloud
@@ -86,6 +86,7 @@
         remote_src: yes
         owner: www-data
         group: www-data
+        extra_opts: [--strip-components=1]
 
     # -------------- Crée et Active les VHosts --------------
     - name: Créer les Vhosts
@@ -117,7 +118,7 @@
         - { name: 'glpi' }
         - { name: 'nextcloud' }
 
-    # -------------- Redémare Apache --------------
+    # -------------- Redémarre Apache --------------
     - name: Redémarrer Apache
       systemd:
         name: apache2
