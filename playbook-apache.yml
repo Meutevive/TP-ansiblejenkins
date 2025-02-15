@@ -56,7 +56,19 @@
         group: www-data
 
     # -------------- Télécharge et Installe FreshRSS --------------
-    - name: Télécharge FreshRSS via Git
+    - name: Créer le dossier pour FreshRSS
+      file:
+        path: "/var/www/html/freshrss"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Corriger la sécurité Git pour FreshRSS
+      shell: |
+        git config --global --add safe.directory /var/www/html/freshrss || true
+
+    - name: Télécharger FreshRSS via Git
       git:
         repo: "https://github.com/FreshRSS/FreshRSS.git"
         dest: "/var/www/html/freshrss"
@@ -65,14 +77,24 @@
         force: yes
       environment:
         GIT_SSL_NO_VERIFY: "true"
+      ignore_errors: true  # Ignore si git échoue
 
-    - name: Ajuste les permissions de FreshRSS
+    - name:  Fallback , Télécharge FreshRSS via `curl` (si Git échoue)
+      shell: |
+        curl -L https://github.com/FreshRSS/FreshRSS/archive/refs/heads/main.zip -o /tmp/freshrss.zip
+        unzip -o /tmp/freshrss.zip -d /var/www/html/
+        mv /var/www/html/FreshRSS-main /var/www/html/freshrss
+        chown -R www-data:www-data /var/www/html/freshrss
+      when: ansible_failed_task is defined and "'git' in ansible_failed_task.name"
+
+    - name: Ajuster les permissions de FreshRSS
       file:
         path: "/var/www/html/freshrss"
         state: directory
         recurse: yes
         owner: www-data
         group: www-data
+
 
 
     # -------------- Télécharge et Installe GLPI (TAR) --------------
