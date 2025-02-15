@@ -36,29 +36,42 @@
         - glpi
         - nextcloud
 
-    # -------------- Télécharge et Installe FileGator --------------
+    # -------------- Télécharge et Installe FileGator (ZIP) --------------
     - name: Télécharger FileGator
       get_url:
         url: "https://github.com/filegator/filegator/archive/refs/tags/v7.12.0.zip"
         dest: "/tmp/filegator.zip"
 
-    - name: Décompresser FileGator
-      unarchive:
-        src: "/tmp/filegator.zip"
-        dest: "/var/www/html/filegator"
-        remote_src: yes
+    - name: Décompresser FileGator avec unzip
+      command:
+        cmd: "unzip -o /tmp/filegator.zip -d /var/www/html/filegator"
+      args:
+        creates: "/var/www/html/filegator/index.php"
+
+    - name: Ajuster les permissions de FileGator
+      file:
+        path: "/var/www/html/filegator"
+        state: directory
+        recurse: yes
         owner: www-data
         group: www-data
-        extra_opts: [--strip-components=1]
 
-    # -------------- Télécharge et Installe FreshRSS --------------
+    # -------------- Télécharge et Installe FreshRSS (Git) --------------
     - name: Télécharger FreshRSS
       git:
         repo: "https://github.com/FreshRSS/FreshRSS.git"
         dest: "/var/www/html/freshrss"
         version: master
 
-    # -------------- Télécharge et Installe GLPI --------------
+    - name: Ajuster les permissions de FreshRSS
+      file:
+        path: "/var/www/html/freshrss"
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+
+    # -------------- Télécharge et Installe GLPI (TAR) --------------
     - name: Télécharger GLPI
       get_url:
         url: "https://github.com/glpi-project/glpi/releases/download/10.0.13/glpi-10.0.13.tgz"
@@ -71,22 +84,26 @@
         remote_src: yes
         owner: www-data
         group: www-data
-        extra_opts: [--strip-components=1]
 
-    # -------------- Télécharge et Installe Nextcloud --------------
+    # -------------- Télécharge et Installe Nextcloud (ZIP) --------------
     - name: Télécharger Nextcloud
       get_url:
         url: "https://download.nextcloud.com/server/releases/latest.zip"
         dest: "/tmp/nextcloud.zip"
 
-    - name: Décompresser Nextcloud
-      unarchive:
-        src: "/tmp/nextcloud.zip"
-        dest: "/var/www/html/nextcloud"
-        remote_src: yes
+    - name: Décompresser Nextcloud avec unzip
+      command:
+        cmd: "unzip -o /tmp/nextcloud.zip -d /var/www/html/nextcloud"
+      args:
+        creates: "/var/www/html/nextcloud/index.php"
+
+    - name: Ajuster les permissions de Nextcloud
+      file:
+        path: "/var/www/html/nextcloud"
+        state: directory
+        recurse: yes
         owner: www-data
         group: www-data
-        extra_opts: [--strip-components=1]
 
     # -------------- Crée et Active les VHosts --------------
     - name: Créer les Vhosts
