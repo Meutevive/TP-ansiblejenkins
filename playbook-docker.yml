@@ -62,52 +62,68 @@
           - name: proxy_network
 
     # --------------------- MySQL pour WordPress ---------------------
-    - name: Déployer MySQL pour WordPress
+    - name: Create environment file for MySQL
+      copy:
+        dest: "/docker/wordpress/mysql.env"
+        content: |
+          MYSQL_ROOT_PASSWORD=rootpassword
+          MYSQL_DATABASE=wordpress
+          MYSQL_USER=wordpress
+          MYSQL_PASSWORD=wordpresspassword
+
+    - name: Deploy MySQL for WordPress
       docker_container:
         name: wordpress_db
         image: mysql:5.7
         restart_policy: always
-        env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: wordpress
-          MYSQL_USER: wordpress
-          MYSQL_PASSWORD: wordpresspassword
+        env_file: "/docker/wordpress/mysql.env"
         volumes:
           - /docker/wordpress/mysql:/var/lib/mysql
         networks:
           - name: proxy_network
 
 # --------------------- WordPress ---------------------
-    - name: Déployer WordPress
+    - name: Create environment file for WordPress
+      copy:
+        dest: "/docker/wordpress/wordpress.env"
+        content: |
+          WORDPRESS_DB_HOST=wordpress_db
+          WORDPRESS_DB_USER=wordpress
+          WORDPRESS_DB_PASSWORD=wordpresspassword
+
+    - name: Deploy WordPress
       docker_container:
         name: wordpress
         image: wordpress:latest
         restart_policy: always
-        env:
-          WORDPRESS_DB_HOST: wordpress_db
-          WORDPRESS_DB_USER: wordpress
-          WORDPRESS_DB_PASSWORD: wordpresspassword
+        env_file: "/docker/wordpress/wordpress.env"
         ports:
           - "8080:80"
         networks:
           - name: proxy_network
         links:
-          - wordpress_db
+          - wordpress_db:mysql
 
 
 # --------------------- Vaultwarden ---------------------
-    - name: Déployer Vaultwarden
-      docker_container:
-        name: vaultwarden
-        image: vaultwarden/server:latest
-        restart_policy: always
-        ports:
-          - "8081:80"
-        volumes:
-          - /docker/vaultwarden:/data
-        env:
-          SIGNUPS_ALLOWED: "false"
-          ADMIN_TOKEN: "supersecuretoken"
-        networks:
-          - name: proxy_network
+- name: Create environment file for Vaultwarden
+  copy:
+    dest: "/docker/vaultwarden/vaultwarden.env"
+    content: |
+      SIGNUPS_ALLOWED=false
+      ADMIN_TOKEN=supersecuretoken
+
+- name: Deploy Vaultwarden
+  docker_container:
+    name: vaultwarden
+    image: vaultwarden/server:latest
+    restart_policy: always
+    env_file: "/docker/vaultwarden/vaultwarden.env"
+    ports:
+      - "8081:80"
+    volumes:
+      - /docker/vaultwarden:/data
+    networks:
+      - name: proxy_network
+
 
