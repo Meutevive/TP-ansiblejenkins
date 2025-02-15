@@ -61,13 +61,13 @@
         networks:
           - name: proxy_network
 
-    # --------------------- WordPress ---------------------
+    # --------------------- MySQL pour WordPress ---------------------
     - name: Déployer MySQL pour WordPress
       docker_container:
         name: wordpress_db
         image: mysql:5.7
         restart_policy: always
-        environment:
+        env:
           MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_DATABASE: wordpress
           MYSQL_USER: wordpress
@@ -77,12 +77,13 @@
         networks:
           - name: proxy_network
 
+# --------------------- WordPress ---------------------
     - name: Déployer WordPress
       docker_container:
         name: wordpress
         image: wordpress:latest
         restart_policy: always
-        environment:
+        env:
           WORDPRESS_DB_HOST: wordpress_db
           WORDPRESS_DB_USER: wordpress
           WORDPRESS_DB_PASSWORD: wordpresspassword
@@ -92,6 +93,7 @@
           - name: proxy_network
         links:
           - wordpress_db
+
 
 # --------------------- Vaultwarden ---------------------
     - name: Déployer Vaultwarden
@@ -103,8 +105,9 @@
           - "8081:80"
         volumes:
           - /docker/vaultwarden:/data
-        environment:
+        env:
           SIGNUPS_ALLOWED: "false"
           ADMIN_TOKEN: "supersecuretoken"
         networks:
           - name: proxy_network
+
