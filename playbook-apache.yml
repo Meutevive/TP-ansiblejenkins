@@ -7,7 +7,7 @@
 
   tasks:
     # -------------- Installe Apache et les dépendances --------------
-    - name: Installer Apache et dépendances
+    - name: Installe Apache et dépendances
       apt:
         name:
           - apache2
@@ -17,13 +17,13 @@
           - git
         state: present
 
-    - name: Activer les modules Apache nécessaires
+    - name: Active les modules Apache nécessaires
       apache2_module:
         state: present
         name: rewrite
 
     # -------------- Crée les dossiers pour les services --------------
-    - name: Créer les dossiers pour les services web
+    - name: Crée les dossiers pour les services web
       file:
         path: "/var/www/html/{{ item }}"
         state: directory
@@ -37,17 +37,17 @@
         - nextcloud
 
     # -------------- Télécharge et Installe FileGator (ZIP) --------------
-    - name: Télécharger FileGator
+    - name: Télécharge FileGator
       get_url:
         url: "https://github.com/filegator/filegator/archive/refs/tags/v7.12.0.zip"
         dest: "/tmp/filegator.zip"
 
-    - name: Décompresser FileGator avec unzip
+    - name: Décompresse FileGator avec unzip
       shell:
         cmd: "unzip -o /tmp/filegator.zip -d /var/www/html/filegator && mv /var/www/html/filegator/filegator-*/* /var/www/html/filegator/"
         creates: "/var/www/html/filegator/index.php"
 
-    - name: Ajuster les permissions de FileGator
+    - name: Ajuste les permissions de FileGator
       file:
         path: "/var/www/html/filegator"
         state: directory
@@ -55,14 +55,18 @@
         owner: www-data
         group: www-data
 
-    # -------------- Télécharge et Installe FreshRSS (Git) --------------
-    - name: Télécharger FreshRSS
+    # -------------- Télécharge et Installe FreshRSS --------------
+    - name: Télécharge FreshRSS via Git
       git:
         repo: "https://github.com/FreshRSS/FreshRSS.git"
         dest: "/var/www/html/freshrss"
-        version: master
+        version: main
+        depth: 1
+        force: yes
+      environment:
+        GIT_SSL_NO_VERIFY: "true"
 
-    - name: Ajuster les permissions de FreshRSS
+    - name: Ajuste les permissions de FreshRSS
       file:
         path: "/var/www/html/freshrss"
         state: directory
@@ -70,8 +74,9 @@
         owner: www-data
         group: www-data
 
+
     # -------------- Télécharge et Installe GLPI (TAR) --------------
-    - name: Télécharger GLPI
+    - name: Télécharge GLPI
       get_url:
         url: "https://github.com/glpi-project/glpi/releases/download/10.0.13/glpi-10.0.13.tgz"
         dest: "/tmp/glpi.tgz"
@@ -85,7 +90,7 @@
         group: www-data
 
     # -------------- Télécharge et Installe Nextcloud (ZIP) --------------
-    - name: Télécharger Nextcloud
+    - name: Télécharge Nextcloud
       get_url:
         url: "https://download.nextcloud.com/server/releases/latest.zip"
         dest: "/tmp/nextcloud.zip"
@@ -95,7 +100,7 @@
         cmd: "unzip -o /tmp/nextcloud.zip -d /var/www/html/nextcloud"
         creates: "/var/www/html/nextcloud/index.php"
 
-    - name: Ajuster les permissions de Nextcloud
+    - name: Ajuste les permissions de Nextcloud
       file:
         path: "/var/www/html/nextcloud"
         state: directory
@@ -104,7 +109,7 @@
         group: www-data
 
     # -------------- Crée et Active les VHosts --------------
-    - name: Créer les Vhosts
+    - name: Crée les Vhosts
       copy:
         dest: "/etc/apache2/sites-available/{{ item.name }}.conf"
         content: |
