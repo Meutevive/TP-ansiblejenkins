@@ -119,6 +119,12 @@
 
 
 # --------------------- Vaultwarden ---------------------
+    - name: Ensure Vaultwarden environment directory exists
+      file:
+        path: "/docker/vaultwarden"
+        state: directory
+        mode: '0755'
+
     - name: Create environment file for Vaultwarden
       copy:
         dest: "/docker/vaultwarden/vaultwarden.env"
@@ -138,6 +144,7 @@
           - /docker/vaultwarden:/data
         networks:
           - name: proxy_network
+
 
 
 
