@@ -2,6 +2,9 @@
 - name: Installation des services Apache
   hosts: apache
   become: true
+  vars:
+    ansible_become_pass: "root"
+    
   tasks:
     - name: Installer Apache et dépendances
       apt:
