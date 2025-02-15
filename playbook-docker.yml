@@ -2,6 +2,8 @@
 - name: Déploiement des services Docker (Nginx Proxy Manager, WordPress, Vaultwarden, Portainer)
   hosts: docker
   become: true
+  vars:
+    ansible_become_pass: "root"
 
   tasks:
     # ---------------------  Docker ---------------------
