@@ -72,7 +72,7 @@
       git:
         repo: "https://github.com/FreshRSS/FreshRSS.git"
         dest: "/var/www/html/freshrss"
-        version: master
+        version: edge
         depth: 1
         force: yes
       environment:
