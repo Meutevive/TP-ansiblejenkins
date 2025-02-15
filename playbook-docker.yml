@@ -106,24 +106,25 @@
 
 
 # --------------------- Vaultwarden ---------------------
-- name: Create environment file for Vaultwarden
-  copy:
-    dest: "/docker/vaultwarden/vaultwarden.env"
-    content: |
-      SIGNUPS_ALLOWED=false
-      ADMIN_TOKEN=supersecuretoken
+    - name: Create environment file for Vaultwarden
+      copy:
+        dest: "/docker/vaultwarden/vaultwarden.env"
+        content: |
+          SIGNUPS_ALLOWED=false
+          ADMIN_TOKEN=supersecuretoken
 
-- name: Deploy Vaultwarden
-  docker_container:
-    name: vaultwarden
-    image: vaultwarden/server:latest
-    restart_policy: always
-    env_file: "/docker/vaultwarden/vaultwarden.env"
-    ports:
-      - "8081:80"
-    volumes:
-      - /docker/vaultwarden:/data
-    networks:
-      - name: proxy_network
+    - name: Deploy Vaultwarden
+      docker_container:
+        name: vaultwarden
+        image: vaultwarden/server:latest
+        restart_policy: always
+        env_file: "/docker/vaultwarden/vaultwarden.env"
+        ports:
+          - "8081:80"
+        volumes:
+          - /docker/vaultwarden:/data
+        networks:
+          - name: proxy_network
+
 
 
