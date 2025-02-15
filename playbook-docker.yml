@@ -61,7 +61,13 @@
         networks:
           - name: proxy_network
 
-    # --------------------- MySQL pour WordPress ---------------------
+# --------------------- MySQL for WordPress ---------------------
+    - name: Ensure MySQL environment directory exists
+      file:
+        path: "/docker/wordpress"
+        state: directory
+        mode: '0755'
+
     - name: Create environment file for MySQL
       copy:
         dest: "/docker/wordpress/mysql.env"
@@ -83,6 +89,12 @@
           - name: proxy_network
 
 # --------------------- WordPress ---------------------
+    - name: Ensure WordPress environment directory exists
+      file:
+        path: "/docker/wordpress"
+        state: directory
+        mode: '0755'
+
     - name: Create environment file for WordPress
       copy:
         dest: "/docker/wordpress/wordpress.env"
@@ -102,7 +114,8 @@
         networks:
           - name: proxy_network
         links:
-          - wordpress_db:mysql
+          - wordpress_db
+
 
 
 # --------------------- Vaultwarden ---------------------
