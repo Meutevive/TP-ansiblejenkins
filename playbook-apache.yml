@@ -3,9 +3,10 @@
   hosts: apache
   become: true
   vars:
-    ansible_become_pass: "root"
+    ansible_become_pass: "root" # Mot de passe root pour la vm en distance
     
   tasks:
+    # -------------- Installe Apache et les dépendances --------------
     - name: Installer Apache et dépendances
       apt:
         name:
@@ -13,6 +14,7 @@
           - php
           - unzip
           - curl
+          - git
         state: present
 
     - name: Activer les modules Apache nécessaires
@@ -20,6 +22,70 @@
         state: present
         name: rewrite
 
+    # -------------- Crée les dossiers pour les Vhosts --------------
+    - name: Créer les dossiers pour les services web
+      file:
+        path: "/var/www/html/{{ item }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+      with_items:
+        - filegator
+        - freshrss
+        - glpi
+        - nextcloud
+
+    # -------------- Télécharge et Installe FileGator --------------
+    - name: Télécharger FileGator
+      get_url:
+        url: "https://github.com/filegator/filegator/releases/download/v7.10.0/filegator_v7.10.0.zip"
+        dest: "/tmp/filegator.zip"
+
+    - name: Décompresser FileGator
+      unarchive:
+        src: "/tmp/filegator.zip"
+        dest: "/var/www/html/filegator"
+        remote_src: yes
+        owner: www-data
+        group: www-data
+
+    # -------------- Télécharge et Installe FreshRSS --------------
+    - name: Télécharger FreshRSS
+      git:
+        repo: https://github.com/FreshRSS/FreshRSS.git
+        dest: /var/www/html/freshrss
+        version: master
+
+    # -------------- Télécharge et Installe GLPI --------------
+    - name: Télécharger GLPI
+      get_url:
+        url: "https://github.com/glpi-project/glpi/releases/download/10.0.13/glpi-10.0.13.tgz"
+        dest: "/tmp/glpi.tgz"
+
+    - name: Décompresser GLPI
+      unarchive:
+        src: "/tmp/glpi.tgz"
+        dest: "/var/www/html/glpi"
+        remote_src: yes
+        owner: www-data
+        group: www-data
+
+    # -------------- Télécharge et Installe Nextcloud --------------
+    - name: Télécharger Nextcloud
+      get_url:
+        url: "https://download.nextcloud.com/server/releases/latest.zip"
+        dest: "/tmp/nextcloud.zip"
+
+    - name: Décompresser Nextcloud
+      unarchive:
+        src: "/tmp/nextcloud.zip"
+        dest: "/var/www/html/nextcloud"
+        remote_src: yes
+        owner: www-data
+        group: www-data
+
+    # -------------- Crée et Active les VHosts --------------
     - name: Créer les Vhosts
       copy:
         dest: "/etc/apache2/sites-available/{{ item.name }}.conf"
@@ -28,9 +94,12 @@
               ServerName {{ item.domain }}
               DocumentRoot /var/www/html/{{ item.name }}
               <Directory /var/www/html/{{ item.name }}>
+                  Options Indexes FollowSymLinks
                   AllowOverride All
                   Require all granted
               </Directory>
+              ErrorLog ${APACHE_LOG_DIR}/{{ item.name }}_error.log
+              CustomLog ${APACHE_LOG_DIR}/{{ item.name }}_access.log combined
           </VirtualHost>
       with_items:
         - { name: 'filegator', domain: 'files.domaine.local' }
@@ -46,6 +115,7 @@
         - { name: 'glpi' }
         - { name: 'nextcloud' }
 
+    # -------------- Redémare Apache --------------
     - name: Redémarrer Apache
       systemd:
         name: apache2
